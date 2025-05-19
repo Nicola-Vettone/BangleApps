@@ -1,9 +1,0 @@
-{
-  "id": "helloapp",
-  "name": "Hello App",
-  "type": "app",
-  "src": "app.js",
-  "icon": "app.png",
-  "version": "0.01",
-  "description": "Mostra un semplice messaggio"
-}
