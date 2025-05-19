@@ -1,23 +1,14 @@
 {
-  "id": "snake",
+  "id": "NicoSnake",
   "name": "Snake",
   "shortName": "Snake",
   "icon": "snake.png",
   "version": "0.01",
   "description": "Un mini gioco Snake per Bangle.js",
   "tags": "game",
-  "supports": [
-    "BANGLEJS",
-    "BANGLEJS2"
-  ],
+  "supports": ["BANGLEJS", "BANGLEJS2"],
   "storage": [
-    {
-      "name": "snake.app.js",
-      "url": "app.js"
-    },
-    {
-      "name": "snake.img",
-      "url": "snake.png"
-    }
+    { "name": "NicoSnake.app.js", "url": "snake_app.js" },
+    { "name": "NicoSnake.img", "url": "snake.png" }
   ]
 }
