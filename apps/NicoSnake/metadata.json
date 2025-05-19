@@ -1,7 +1,7 @@
 {
   "id": "NicoSnake",
   "name": "NicoSnake",
-  "shortName": "Snake",
+  "shortName": "NicoSnake",
   "icon": "snake.png",
   "version": "0.01",
   "description": "Un mini gioco Snake per Bangle.js",
