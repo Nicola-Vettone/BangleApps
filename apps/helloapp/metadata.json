@@ -1,0 +1,14 @@
+{
+  "id": "helloapp",
+  "name": "Hello App",
+  "shortName": "Hello",
+  "icon": "app.png",
+  "version": "0.01",
+  "description": "Mostra un semplice messaggio",
+  "tags": "",
+  "supports": ["BANGLEJS", "BANGLEJS2"],
+  "storage": [
+    { "name": "helloapp.app.js", "url": "app.js" },
+    { "name": "helloapp.img", "url": "app.png" }
+  ]
+}
