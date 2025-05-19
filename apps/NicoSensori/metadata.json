@@ -1,0 +1,20 @@
+{
+  "id": "nicosensori",
+  "name": "NicoSensori",
+  "shortName": "Nico",
+  "icon": "nicosensori.png",
+  "version": "0.01",
+  "description": "Legge tutti i sensori del Bangle.js 2",
+  "tags": "sensor,tools",
+  "supports": ["BANGLEJS", "BANGLEJS2"],
+  "storage": [
+    {
+      "name": "nicosensori.app.js",
+      "url": "app.js"
+    },
+    {
+      "name": "nicosensori.img",
+      "url": "nicosensori.png"
+    }
+  ]
+}
