@@ -3,7 +3,7 @@
   "name": "NicoSensori",
   "shortName": "Nico",
   "icon": "nicosensori.png",
-  "version": "0.01",
+  "version": "0.02",
   "description": "Legge tutti i sensori del Bangle.js 2",
   "tags": "sensor,tools",
   "supports": ["BANGLEJS", "BANGLEJS2"],
