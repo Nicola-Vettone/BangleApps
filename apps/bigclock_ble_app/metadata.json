@@ -1,5 +1,5 @@
 {
-  "id": "bigclock_ble_app",
+  "id": "bigclock_ble",
   "name": "Big Clock BLE",
   "version": "1.0.0",
   "description": "Un orologio digitale con font 'Anton', mostra ora, data, giorno e MAC address. Espone sensori via BLE.",
@@ -20,7 +20,7 @@
   "storage": [
     {
       "name": "bigclock_ble.app.js",
-      "url": "bigclock_ble_app.js"
+      "url": "bigclock_ble.app.js"
     },
     {
       "name": "bigclock_ble.png",
