@@ -20,7 +20,9 @@ let draw = function() {
   var dateStr = require("locale").date(date, 0).toUpperCase()+"\n"+
                 require("locale").dow(date, 0).toUpperCase();
   g.setFontAlign(0, 0).setFont("6x8", 2).drawString(dateStr, x, y+48);
-
+     // Ottieni e stampa il MAC address
+      var macAddress = NRF.getAddress(); // Ottieni il MAC address
+      g.setFontAlign(0, 0).setFont("6x8", 1.5).drawString(macAddress, x, y + 80);
   // queue next draw
   if (drawTimeout) clearTimeout(drawTimeout);
   drawTimeout = setTimeout(function() {
@@ -42,4 +44,137 @@ Bangle.setUI({
 Bangle.loadWidgets();
 draw();
 setTimeout(Bangle.drawWidgets,0);
+  
+  
+  var acc_1, hrm_1, bar_1, mag_1, gps_1;
+
+// Funzioni di encoding compatibili
+function toByteArray(value, bytes, signed) {
+  if (signed && value < 0) value += 1 << (bytes * 8);
+  var arr = [];
+  for (var i = 0; i < bytes; i++) arr.push((value >> (i * 8)) & 0xFF);
+  return arr;
+}
+
+function encodeAcc(data) {
+  var x = toByteArray(data.x * 1000, 2, true);
+  var y = toByteArray(data.y * 1000, 2, true);
+  var z = toByteArray(data.z * 1000, 2, true);
+  return [x[0], x[1], y[0], y[1], z[0], z[1]];
+}
+
+function encodeMag(data) {
+  var x = toByteArray(data.x, 2, true);
+  var y = toByteArray(data.y, 2, true);
+  var z = toByteArray(data.z, 2, true);
+  return [x[0], x[1], y[0], y[1], z[0], z[1]];
+}
+
+function encodeGps(data) {
+  var spd = toByteArray(Math.round(data.speed * 1000 / 36), 2, false);
+  var lat = toByteArray(Math.round(data.lat * 1e7), 4, true);
+  var lon = toByteArray(Math.round(data.lon * 1e7), 4, true);
+  var alt = toByteArray(Math.round(data.alt * 100), 3, true);
+  var hdg = toByteArray(Math.round(data.course * 100), 2, false);
+  return [
+    157, 2,
+    spd[0], spd[1],
+    lat[0], lat[1], lat[2], lat[3],
+    lon[0], lon[1], lon[2], lon[3],
+    alt[0], alt[1], alt[2],
+    hdg[0], hdg[1]
+  ];
+}
+
+// === Imposta i servizi BLE con onRead ===
+function setupBLE() {
+  require("ble_advert").set(0x180D, undefined, {
+    connectable: true,
+    discoverable: true,
+    scannable: true,
+    whenConnected: true
+  });
+
+  NRF.setServices({
+    0x180D: { // HRM
+      0x2A37: {
+        readable: true,
+        value: [6, 0],
+        onRead: function () {
+          var val = (hrm_1 && hrm_1.confidence >= 50) ? hrm_1.bpm : 0;
+          return [6, val];
+        }
+      },
+      0x2A38: {
+        value: 2,
+        readable: true // wrist position
+      }
+    },
+    0x181A: { // Ambiente
+      0x2A6C: {
+        readable: true,
+        value: [0, 0, 0],
+        onRead: function () {
+          return bar_1 ? toByteArray(Math.round(bar_1.altitude * 100), 3, true) : [0, 0, 0];
+        }
+      },
+      0x2A6D: {
+        readable: true,
+        value: [0, 0, 0, 0],
+        onRead: function () {
+          return bar_1 ? toByteArray(Math.round(bar_1.pressure * 10), 4, false) : [0, 0, 0, 0];
+        }
+      },
+      0x2A1F: {
+        readable: true,
+        value: [0, 0],
+        onRead: function () {
+          return bar_1 ? toByteArray(Math.round(bar_1.temperature * 10), 2, true) : [0, 0];
+        }
+      },
+      0x2AA1: {
+        readable: true,
+        value: [0, 0, 0, 0, 0, 0],
+        onRead: function () {
+          return mag_1 ? encodeMag(mag_1) : [0, 0, 0, 0, 0, 0];
+        }
+      }
+    },
+    0x1819: { // GPS
+      0x2A67: {
+        readable: true,
+        value: new Array(17).fill(0),
+        onRead: function () {
+          return gps_1 ? encodeGps(gps_1) : new Array(17).fill(0);
+        }
+      }
+    },
+    "E95D0753251D470AA062FA1922DFA9A8": { // Accelerometro custom UUID
+      readable: true,
+      value: [0, 0, 0, 0, 0, 0],
+      onRead: function () {
+        return acc_1 ? encodeAcc(acc_1) : [0, 0, 0, 0, 0, 0];
+      }
+    }
+  }, { uart: false });
+}
+
+// === Ascolta i sensori ===
+function setupSensors() {
+  Bangle.setHRMPower(true);
+  Bangle.setBarometerPower(true);
+  Bangle.setCompassPower(true);
+  Bangle.setGPSPower(true);
+
+  Bangle.on("HRM", function (v) { hrm_1 = v; });
+  Bangle.on("pressure", function (v) { bar_1 = v; });
+  Bangle.on("mag", function (v) { mag_1 = v; });
+  Bangle.on("GPS", function (v) { gps_1 = v; });
+  Bangle.on("accel", function (v) { acc_1 = v; });
+}
+
+// === Avvio ===
+setupBLE();
+setupSensors();
+
 }
