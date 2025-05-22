@@ -14,4 +14,5 @@
 0.10: Use Bangle.setUI({remove:...}) to allow loading the launcher without a full reset on 2v16
 0.11: Moved enhanced Anton clock to 'Anton Clock Plus' and stripped this clock back down to make it faster for new users (270ms -> 170ms)
       Modified to avoid leaving functions defined when using setUI({remove:...})
-0.14 prova 
+0.14 non scarica
+0.15 prova 2
