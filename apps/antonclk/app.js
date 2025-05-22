@@ -7,86 +7,99 @@ Graphics.prototype.setFontAnton = function(scale) {
 let acc_1, hrm_1, bar_1, mag_1;
 
 function drawClock() {
-  let x = g.getWidth() / 2;
-  let y = g.getHeight() / 2;
+  const x = g.getWidth() / 2;
+  const y = g.getHeight() / 2;
   g.reset().clearRect(Bangle.appRect);
-  let date = new Date();
-  let timeStr = require("locale").time(date, 1);
+  const date = new Date();
+  const timeStr = require("locale").time(date, 1);
   g.setFontAlign(0, 0).setFont("Anton").drawString(timeStr, x, y);
-  let dateStr = require("locale").date(date, 0).toUpperCase() + "\n" +
-                require("locale").dow(date, 0).toUpperCase();
+  const dateStr = require("locale").date(date, 0).toUpperCase() + "\n" +
+                  require("locale").dow(date, 0).toUpperCase();
   g.setFontAlign(0, 0).setFont("6x8", 2).drawString(dateStr, x, y + 48);
   g.setFontAlign(0, 0).setFont("6x8", 1.5).drawString(NRF.getAddress(), x, y + 80);
 }
 
 function toByteArray(value, bytes, signed) {
   if (signed && value < 0) value += 1 << (bytes * 8);
-  let arr = [];
+  const arr = [];
   for (let i = 0; i < bytes; i++) arr.push((value >> (i * 8)) & 0xFF);
   return arr;
 }
 
 function encodeAcc(data) {
-  let x = toByteArray(data.x * 1000, 2, true);
-  let y = toByteArray(data.y * 1000, 2, true);
-  let z = toByteArray(data.z * 1000, 2, true);
+  const x = toByteArray(data.x * 1000, 2, true);
+  const y = toByteArray(data.y * 1000, 2, true);
+  const z = toByteArray(data.z * 1000, 2, true);
   return [x[0], x[1], y[0], y[1], z[0], z[1]];
 }
 
 function encodeMag(data) {
-  let x = toByteArray(data.x, 2, true);
-  let y = toByteArray(data.y, 2, true);
-  let z = toByteArray(data.z, 2, true);
+  const x = toByteArray(data.x, 2, true);
+  const y = toByteArray(data.y, 2, true);
+  const z = toByteArray(data.z, 2, true);
   return [x[0], x[1], y[0], y[1], z[0], z[1]];
 }
 
-function setupBLE() {
-  NRF.setServices({
+function updateBLE() {
+  NRF.updateServices({
     0x180D: {
       0x2A37: {
-        readable: true,
-        value: [6, 0],
-        onRead: () => [6, hrm_1 && hrm_1.confidence >= 50 ? hrm_1.bpm : 0]
+        value: [6, hrm_1 && hrm_1.confidence >= 50 ? hrm_1.bpm : 0],
+        notify: true
       }
     },
     0x181A: {
       0x2A1F: {
-        readable: true,
-        value: [0, 0],
-        onRead: () => bar_1 ? toByteArray(Math.round(bar_1.temperature * 10), 2, true) : [0, 0]
+        value: bar_1 ? toByteArray(Math.round(bar_1.temperature * 10), 2, true) : [0, 0],
+        notify: true
       },
       0x2AA1: {
-        readable: true,
-        value: [0, 0, 0, 0, 0, 0],
-        onRead: () => mag_1 ? encodeMag(mag_1) : [0, 0, 0, 0, 0, 0]
+        value: mag_1 ? encodeMag(mag_1) : [0, 0, 0, 0, 0, 0],
+        notify: true
       }
     },
     "E95D0753251D470AA062FA1922DFA9A8": {
-      readable: true,
-      value: [0, 0, 0, 0, 0, 0],
-      onRead: () => acc_1 ? encodeAcc(acc_1) : [0, 0, 0, 0, 0, 0]
+      "E95D0753251D470AA062FA1922DFA9A8": {
+        value: acc_1 ? encodeAcc(acc_1) : [0, 0, 0, 0, 0, 0],
+        notify: true
+      }
+    }
+  });
+}
+
+function setupBLE() {
+  NRF.setServices({
+    0x180D: { 0x2A37: { value: [6, 0], notify: true, readable: true }},
+    0x181A: {
+      0x2A1F: { value: [0, 0], notify: true, readable: true },
+      0x2AA1: { value: [0, 0, 0, 0, 0, 0], notify: true, readable: true }
+    },
+    "E95D0753251D470AA062FA1922DFA9A8": {
+      "E95D0753251D470AA062FA1922DFA9A8": {
+        value: [0, 0, 0, 0, 0, 0],
+        notify: true,
+        readable: true
+      }
     }
   }, { uart: false });
 }
 
-function collectSensorData() {
-  console.log("\u23F2\uFE0F Reading sensors...");
-  Bangle.setHRMPower(true);
-  Bangle.setBarometerPower(true);
-  Bangle.setCompassPower(true);
+function startSensorCycle() {
+  Bangle.setHRMPower(true, "cycle");
+  Bangle.setBarometerPower(true, "cycle");
+  Bangle.setCompassPower(true, "cycle");
 
   setTimeout(() => {
-    Bangle.setHRMPower(false);
-    Bangle.setBarometerPower(false);
-    Bangle.setCompassPower(false);
-    console.log("\u2705 Sensors off to save battery.");
-  }, 5000);
+    Bangle.setHRMPower(false, "cycle");
+    Bangle.setBarometerPower(false, "cycle");
+    Bangle.setCompassPower(false, "cycle");
+  }, 3000); // Spegni i sensori dopo 3s per risparmiare batteria
 }
 
-Bangle.on("HRM", v => { console.log("\u2764\uFE0F", v); hrm_1 = v; });
-Bangle.on("pressure", v => { console.log("\u1F321\uFE0F", v); bar_1 = v; });
-Bangle.on("mag", v => { console.log("\u1F9ED", v); mag_1 = v; });
-Bangle.on("accel", v => { console.log("\u1F4C8", v); acc_1 = v; });
+Bangle.on("HRM", v => { hrm_1 = v; updateBLE(); });
+Bangle.on("pressure", v => { bar_1 = v; updateBLE(); });
+Bangle.on("mag", v => { mag_1 = v; updateBLE(); });
+Bangle.on("accel", v => { acc_1 = v; updateBLE(); });
 
 Bangle.setUI("clock");
 Bangle.loadWidgets();
@@ -95,7 +108,8 @@ setTimeout(Bangle.drawWidgets, 0);
 
 setupBLE();
 
+// Loop: aggiorna orologio + accendi sensori brevemente ogni 10s
 setInterval(() => {
   drawClock();
-  collectSensorData();
+  startSensorCycle();
 }, 10000);
