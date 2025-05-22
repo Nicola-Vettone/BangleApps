@@ -85,16 +85,19 @@ function setupBLE() {
 }
 
 function startSensorCycle() {
-  Bangle.setHRMPower(true, "cycle");
+  // HRM sempre attivo
+  if (!Bangle.isHRMOn()) Bangle.setHRMPower(true, "always");
+
+  // Accende solo Barometro e Bussola temporaneamente
   Bangle.setBarometerPower(true, "cycle");
   Bangle.setCompassPower(true, "cycle");
 
   setTimeout(() => {
-    Bangle.setHRMPower(false, "cycle");
     Bangle.setBarometerPower(false, "cycle");
     Bangle.setCompassPower(false, "cycle");
-  }, 3000); // Spegni i sensori dopo 3s per risparmiare batteria
+  }, 5000); // Spegni dopo 5 secondi
 }
+
 
 Bangle.on("HRM", v => { hrm_1 = v; updateBLE(); });
 Bangle.on("pressure", v => { bar_1 = v; updateBLE(); });
