@@ -1,8 +1,5 @@
-// Clock with large digits using the "Anton" bold font
 Graphics.prototype.setFontAnton = function(scale) {
-  g.setFontCustom(
-    atob("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAA/gAAAAAAAAAAP/gAAAAAAAAAH//gAAAAAAAAB///gAAAAAAAAf///gAAAAAAAP////gAAAAAAD/////gAAAAAA//////gAAAAAP//////gAAAAH///////gAAAB////////gAAAf////////gAAP/////////gAD//////////AA//////////gAA/////////4AAA////////+AAAA////////gAAAA///////wAAAAA//////8AAAAAA//////AAAAAAA/////gAAAAAAA////4AAAAAAAA///+AAAAAAAAA///gAAAAAAAAA//wAAAAAAAAAA/8AAAAAAAAAAA/AAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////AAAAAB///////8AAAAH////////AAAAf////////wAAA/////////4AAB/////////8AAD/////////+AAH//////////AAP//////////gAP//////////gAP//////////gAf//////////wAf//////////wAf//////////wAf//////////wA//8AAAAAB//4A//wAAAAAAf/4A//gAAAAAAP/4A//gAAAAAAP/4A//gAAAAAAP/4A//wAAAAAAf/4A///////////4Af//////////wAf//////////wAf//////////wAf//////////wAP//////////gAP//////////gAH//////////AAH//////////AAD/////////+AAB/////////8AAA/////////4AAAP////////gAAAD///////+AAAAAf//////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/gAAAAAAAAAAP/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/AAAAAAAAAAA//AAAAAAAAAAA/+AAAAAAAAAAB/8AAAAAAAAAAD//////////gAH//////////gAP//////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gAAAAAAAAH/4AAAAAAAAAAH/wAAAAAAAAAAH/wAAAAAAAAAAH/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//8AAA/////+B///AAA/////+B///wAA/////+B///4AA/////+B///8AA/////+B///8AA/////+B///+AA/////+B////AA/////+B////AA/////+B////AA/////+B////gA/////+B////gA/////+B////gA/////+A////gA//gP/gAAB//wA//gf/AAAA//wA//gf/AAAAf/wA//g//AAAAf/wA//g//AAAA//wA//g//gAAA//wA//g//+AAP//wA//g////////gA//g////////gA//g////////gA//g////////gA//g////////AA//gf///////AA//gf//////+AA//gP//////+AA//gH//////8AA//gD//////4AA//gB//////wAA//gA//////AAAAAAAH////8AAAAAAAA////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////gAAAAB///////+AAAAH////////gAAAf////////4AAB/////////8AAD/////////+AAH//////////AAH//////////gAP//////////gAP//////////gAf//////////wAf//////////wAf//////////wAf//////////wAf//////////4A//wAD/4AAf/4A//gAH/wAAP/4A//gAH/wAAP/4A//gAP/wAAP/4A//gAP/4AAf/4A//wAP/+AD//4A///wP//////4Af//4P//////wAf//4P//////wAf//4P//////wAf//4P//////wAP//4P//////gAP//4H//////gAH//4H//////AAH//4D/////+AAD//4D/////8AAB//4B/////4AAA//4A/////wAAAP/4AP////AAAAB/4AD///4AAAAAAAAAH/8AAAAAAAAAAAAAAAA
-"),
+  g.setFontCustom(atob("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAA/gAAAAAAAAAAP/gAAAAAAAAAH//gAAAAAAAAB///gAAAAAAAAf///gAAAAAAAP////gAAAAAAD/////gAAAAAA//////gAAAAAP//////gAAAAH///////gAAAB////////gAAAf////////gAAP/////////gAD//////////AA//////////gAA/////////4AAA////////+AAAA////////gAAAA///////wAAAAA//////8AAAAAA//////AAAAAAA/////gAAAAAAA////4AAAAAAAA///+AAAAAAAAA///gAAAAAAAAA//wAAAAAAAAAA/8AAAAAAAAAAA/AAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////AAAAAB///////8AAAAH////////AAAAf////////wAAA/////////4AAB/////////8AAD/////////+AAH//////////AAP//////////gAP//////////gAP//////////gAf//////////wAf//////////wAf//////////wAf//////////wA//8AAAAAB//4A//wAAAAAAf/4A//gAAAAAAP/4A//gAAAAAAP/4A//gAAAAAAP/4A//wAAAAAAf/4A///////////4Af//////////wAf//////////wAf//////////wAf//////////wAP//////////gAP//////////gAH//////////AAH//////////AAD/////////+AAB/////////8AAA/////////4AAAP////////gAAAD///////+AAAAAf//////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/gAAAAAAAAAAP/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/AAAAAAAAAAA//AAAAAAAAAAA/+AAAAAAAAAAB/8AAAAAAAAAAD//////////gAH//////////gAP//////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gAAAAAAAAH/4AAAAAAAAAAH/wAAAAAAAAAAH/wAAAAAAAAAAH/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//8AAA/////+B///AAA/////+B///wAA/////+B///4AA/////+B///8AA/////+B///8AA/////+B///+AA/////+B////AA/////+B////AA/////+B////AA/////+B////gA/////+B////gA/////+B////gA/////+A////gA//gP/gAAB//wA//gf/AAAA//wA//gf/AAAAf/wA//g//AAAAf/wA//g//AAAA//wA//g//gAAA//wA//g//+AAP//wA//g////////gA//g////////gA//g////////gA//g////////gA//g////////AA//gf///////AA//gf//////+AA//gP//////+AA//gH//////8AA//gD//////4AA//gB//////wAA//gA//////AAAAAAAH////8AAAAAAAA////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////gAAAAB///////+AAAAH////////gAAAf////////4AAB/////////8AAD/////////+AAH//////////AAH//////////gAP//////////gAP//////////gAf//////////wAf//////////wAf//////////wAf//////////wAf//////////4A//wAD/4AAf/4A//gAH/wAAP/4A//gAH/wAAP/4A//gAP/wAAP/4A//gAP/4AAf/4A//wAP/+AD//4A///wP//////4Af//4P//////wAf//4P//////wAf//4P//////wAf//4P//////wAP//4P//////gAP//4H//////gAH//4H//////AAH//4D/////+AAD//4D/////8AAB//4B/////4AAA//4A/////wAAAP/4AP////AAAAB/4AD///4AAAAAAAAAH/8AAAAAAAAAAAAAAAA"),
     46,
     atob("EiAnGicnJycnJycnEw=="),
     78 + (scale << 8) + (1 << 16)
@@ -88,36 +85,51 @@ Graphics.prototype.setFontAnton = function(scale) {
   }
 
   function updateBLEData() {
-    NRF.updateServices({
-      0x180D: { 0x2A37: { value: hrm_1 && hrm_1.confidence >= 50 ? [6, hrm_1.bpm] : [6, 0], notify: true } },
-      0x181A: {
-        0x2A6C: { value: bar_1 ? toByteArray(Math.round(bar_1.altitude * 100), 3, true) : [0, 0, 0], notify: true },
-        0x2A6D: { value: bar_1 ? toByteArray(Math.round(bar_1.pressure * 10), 4, false) : [0, 0, 0, 0], notify: true },
-        0x2A1F: { value: bar_1 ? toByteArray(Math.round(bar_1.temperature * 10), 2, true) : [0, 0], notify: true },
-        0x2AA1: { value: mag_1 ? encodeMag(mag_1) : [0, 0, 0, 0, 0, 0], notify: true }
-      },
-      0x1819: {
-        0x2A67: { value: gps_1 ? encodeGps(gps_1) : new Array(17).fill(0), notify: true }
-      },
-      "E95D0753251D470AA062FA1922DFA9A8": {
+    try {
+      NRF.updateServices({
+        0x180D: {
+          0x2A37: {
+            value: hrm_1 && hrm_1.confidence >= 50 ? [6, hrm_1.bpm] : [6, 0],
+            notify: true
+          }
+        },
+        0x181A: {
+          0x2A6C: { value: bar_1 ? toByteArray(Math.round(bar_1.altitude * 100), 3, true) : [0, 0, 0], notify: true },
+          0x2A6D: { value: bar_1 ? toByteArray(Math.round(bar_1.pressure * 10), 4, false) : [0, 0, 0, 0], notify: true },
+          0x2A1F: { value: bar_1 ? toByteArray(Math.round(bar_1.temperature * 10), 2, true) : [0, 0], notify: true },
+          0x2AA1: { value: mag_1 ? encodeMag(mag_1) : [0, 0, 0, 0, 0, 0], notify: true }
+        },
+        0x1819: {
+          0x2A67: { value: gps_1 ? encodeGps(gps_1) : new Array(17).fill(0), notify: true }
+        },
         "E95D0753251D470AA062FA1922DFA9A8": {
-          value: acc_1 ? encodeAcc(acc_1) : [0, 0, 0, 0, 0, 0], notify: true
+          "E95D0753251D470AA062FA1922DFA9A8": {
+            value: acc_1 ? encodeAcc(acc_1) : [0, 0, 0, 0, 0, 0],
+            notify: true
+          }
         }
-      }
-    });
+      });
+    } catch (e) {
+      if (e.message.includes("BLE restart")) NRF.disconnect();
+    }
   }
 
   function setupBLE() {
-    require("ble_advert").set(0x180D, undefined, { connectable: true, discoverable: true, scannable: true, whenConnected: true });
+    require("ble_advert").set(0x180D, undefined, { connectable: true, discoverable: true, scannable: true });
     NRF.setServices({
-      0x180D: { 0x2A37: { readable: true, value: [6, 0] }, 0x2A38: { readable: true, value: 2 } },
+      0x180D: {
+        0x2A37: { readable: true, value: [6, 0] },
+        0x2A38: { readable: true, value: 2 }
+      },
       0x181A: {
         0x2A6C: { readable: true, value: [0, 0, 0] },
         0x2A6D: { readable: true, value: [0, 0, 0, 0] },
         0x2A1F: { readable: true, value: [0, 0] },
         0x2AA1: { readable: true, value: [0, 0, 0, 0, 0, 0] }
       },
-      0x1819: { 0x2A67: { readable: true, value: new Array(17).fill(0) } },
+      0x1819: {
+        0x2A67: { readable: true, value: new Array(17).fill(0) }
+      },
       "E95D0753251D470AA062FA1922DFA9A8": {
         readable: true,
         value: [0, 0, 0, 0, 0, 0]
@@ -155,6 +167,9 @@ Graphics.prototype.setFontAnton = function(scale) {
   Bangle.setCompassPower(true);
   Bangle.setGPSPower(true);
 
-  setupBLE();
-  setInterval(checkSensorStuck, 60000);
+  // ⚠️ Ritardiamo i servizi BLE per evitare blocchi durante l’upload
+  setTimeout(() => {
+    setupBLE();
+    setInterval(checkSensorStuck, 60000);
+  }, 2000);
 }
