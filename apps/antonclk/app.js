@@ -44,7 +44,7 @@ function updateBLE() {
   NRF.updateServices({
     0x180D: {
       0x2A37: {
-        value: [6, hrm_1 && hrm_1.confidence >= 50 ? hrm_1.bpm : 0],
+        value: [6, hrm_1 && hrm_1.confidence >= 50 ? (hrm_1.bpm > 0 ? hrm_1.bpm : lastValidBPM) : lastValidBPM],
         notify: true
       }
     },
@@ -98,8 +98,19 @@ function startSensorCycle() {
   }, 5000); // Spegni dopo 5 secondi
 }
 
+let lastValidBPM = 0;
 
-Bangle.on("HRM", v => { hrm_1 = v; updateBLE(); });
+
+Bangle.on("HRM", v => {
+  if (v && v.confidence >= 50) {
+    if (v.bpm > 0) {
+      lastValidBPM = v.bpm;
+    }
+  }
+  hrm_1 = v;
+  updateBLE();
+});
+
 Bangle.on("pressure", v => { bar_1 = v; updateBLE(); });
 Bangle.on("mag", v => { mag_1 = v; updateBLE(); });
 Bangle.on("accel", v => { acc_1 = v; updateBLE(); });
