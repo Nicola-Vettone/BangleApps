@@ -339,7 +339,7 @@
         document.getElementById("correction").addEventListener("change",refreshQRCode);
 
         document.getElementById("upload").addEventListener("click", function() {
-          var content = document.getElementById("text").value;
+          var content = "MAC: " + NRF.getAddress();
           if(document.getElementById("useWIFI").checked){
             content = document.getElementById("ssid").value
           }
