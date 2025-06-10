@@ -5,7 +5,7 @@ Graphics.prototype.setFontAnton = function(scale) {
 };
 
 let acc_1, hrm_1, bar_1, mag_1;
-let mac = NRF.getAddress();
+
 function drawClock() {
   const x = g.getWidth() / 2;
   const y = g.getHeight() / 2;
@@ -16,9 +16,7 @@ function drawClock() {
   const dateStr = require("locale").date(date, 0).toUpperCase() + "\n" +
                   require("locale").dow(date, 0).toUpperCase();
   g.setFontAlign(0, 0).setFont("6x8", 2).drawString(dateStr, x, y + 48);
-  g.setFontAlign(0, 0).setFont("6x8", 1.5).drawString(mac, x, y + 80);
-  require("qrcode").draw(mac, {scale:4});
-
+  g.setFontAlign(0, 0).setFont("6x8", 1.5).drawString(NRF.getAddress(), x, y + 80);
 }
 
 function toByteArray(value, bytes, signed) {
