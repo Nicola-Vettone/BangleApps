@@ -1,3 +1,11 @@
+// antonclk/app.js
+// Bangle.js 2 clock + BLE sensors + in-app sleep icon (no SleepLog)
+// Fixes:
+// - HH:MM always shown with ":" centered
+// - Local time Europe/Rome (CET/CEST) even if device time is UTC
+// - Sleep icon bottom-right (X=not worn, O=awake, moon=sleep, moon+dot=deep)
+// - No sleep data sent over BLE
+
 // Clock with large digits using the "Anton" bold font
 Graphics.prototype.setFontAnton = function (scale) {
   g.setFontCustom(
@@ -15,53 +23,63 @@ let acc_1, hrm_1, bar_1, mag_1;
 let lastValidBPM = 0;
 
 // ---------------------------
+// Local time Europe/Rome (CET/CEST) even if watch is UTC
+// ---------------------------
+function _lastSundayOfMonthUTC(year, month0) {
+  // last day of month at 01:00 UTC
+  const d = new Date(Date.UTC(year, month0 + 1, 0, 1, 0, 0));
+  const dow = d.getUTCDay(); // 0=Sun
+  d.setUTCDate(d.getUTCDate() - dow);
+  return d;
+}
+function _romeOffsetMinutes(utcDate) {
+  const y = utcDate.getUTCFullYear();
+  const start = _lastSundayOfMonthUTC(y, 2); // March
+  const end = _lastSundayOfMonthUTC(y, 9);   // October
+  const t = utcDate.getTime();
+  const inDST = (t >= start.getTime()) && (t < end.getTime());
+  return inDST ? 120 : 60;
+}
+function _romeNowDate() {
+  const nowUtc = new Date();
+  const offMin = _romeOffsetMinutes(nowUtc);
+  return new Date(nowUtc.getTime() + offMin * 60000);
+}
+
+// ---------------------------
 // Sleep detection (in-app)
 // ---------------------------
-// Stati: 0 unknown, 1 not worn, 2 awake, 3 light, 4 deep
+// States: 0 unknown, 1 not worn, 2 awake, 3 light, 4 deep
 let sleepStatus = 0;
-
-// valutazione sleep ogni 10 minuti
 let sleepLastEval = 0;
 
-// Debounce "worn": evita X appena indossi
-let wornScore = 0; // sale quando HRM confidence buona, scende quando bassa
+// Debounce "worn" detection to avoid X flicker
+let wornScore = 0;
 const WORN_SCORE_MAX = 6;
-const WORN_SCORE_MIN_WORN = 2; // sopra questo => considerato worn
+const WORN_SCORE_MIN_WORN = 2;
 
-// Soglie tarabili
+// thresholds (tunable)
 const SLEEP_MOV_DEEP = 30;
 const SLEEP_MOV_LIGHT = 100;
-
-// Confidence minima per considerare "worn"
 const HRM_WORN_CONFIDENCE_MIN = 35;
 
-// Icone 16x16
-const ICON_MOON_16 = {
-  w: 16, h: 16, bpp: 1,
-  data: new Uint8Array([
-    0x00,0x00, 0x03,0x80, 0x0F,0xC0, 0x1F,0xE0,
-    0x3E,0x70, 0x3C,0x30, 0x78,0x18, 0x78,0x18,
-    0x78,0x18, 0x78,0x18, 0x3C,0x30, 0x3E,0x70,
-    0x1F,0xE0, 0x0F,0xC0, 0x03,0x80, 0x00,0x00
-  ])
-};
-
-const ICON_AWAKE_16 = {
-  w: 16, h: 16, bpp: 1,
-  data: new Uint8Array([
-    0x00,0x00, 0x03,0x80, 0x0C,0x60, 0x18,0x30,
-    0x30,0x18, 0x60,0x0C, 0x60,0x0C, 0xC0,0x06,
-    0xC0,0x06, 0x60,0x0C, 0x60,0x0C, 0x30,0x18,
-    0x18,0x30, 0x0C,0x60, 0x03,0x80, 0x00,0x00
-  ])
-};
+// 16x16 icons
+const ICON_MOON_16 = { w:16,h:16,bpp:1, data:new Uint8Array([
+  0x00,0x00, 0x03,0x80, 0x0F,0xC0, 0x1F,0xE0,
+  0x3E,0x70, 0x3C,0x30, 0x78,0x18, 0x78,0x18,
+  0x78,0x18, 0x78,0x18, 0x3C,0x30, 0x3E,0x70,
+  0x1F,0xE0, 0x0F,0xC0, 0x03,0x80, 0x00,0x00
+])};
+const ICON_AWAKE_16 = { w:16,h:16,bpp:1, data:new Uint8Array([
+  0x00,0x00, 0x03,0x80, 0x0C,0x60, 0x18,0x30,
+  0x30,0x18, 0x60,0x0C, 0x60,0x0C, 0xC0,0x06,
+  0xC0,0x06, 0x60,0x0C, 0x60,0x0C, 0x30,0x18,
+  0x18,0x30, 0x0C,0x60, 0x03,0x80, 0x00,0x00
+])};
 
 function drawSleepIcon() {
   const r = Bangle.appRect;
-  const size = 16;
-  const pad = 6;
-
-  // In basso a destra così la vedi sempre
+  const size = 16, pad = 6;
   const x = r.x2 - size - pad;
   const y = r.y2 - size - pad;
 
@@ -69,7 +87,7 @@ function drawSleepIcon() {
 
   if (sleepStatus === 3 || sleepStatus === 4) {
     g.drawImage(ICON_MOON_16, x, y);
-    if (sleepStatus === 4) g.fillCircle(x + 12, y + 4, 2); // deep marker
+    if (sleepStatus === 4) g.fillCircle(x + 12, y + 4, 2);
   } else if (sleepStatus === 2) {
     g.drawImage(ICON_AWAKE_16, x, y);
   } else if (sleepStatus === 1) {
@@ -81,18 +99,12 @@ function drawSleepIcon() {
 }
 
 function updateWornScoreFromHRM() {
-  // se in carica => certamente non indossato
-  if (Bangle.isCharging()) {
-    wornScore = 0;
-    return;
-  }
-
+  if (Bangle.isCharging()) { wornScore = 0; return; }
   const ok = !!(hrm_1 && hrm_1.confidence >= HRM_WORN_CONFIDENCE_MIN);
-
-  if (ok) wornScore = Math.min(WORN_SCORE_MAX, wornScore + 1);
-  else wornScore = Math.max(0, wornScore - 1);
+  wornScore = ok
+    ? Math.min(WORN_SCORE_MAX, wornScore + 1)
+    : Math.max(0, wornScore - 1);
 }
-
 function isWorn() {
   return wornScore >= WORN_SCORE_MIN_WORN;
 }
@@ -102,13 +114,8 @@ function evaluateSleepStatus() {
   if (now - sleepLastEval < 10 * 60 * 1000) return;
   sleepLastEval = now;
 
-  // NOT WORN
-  if (Bangle.isCharging() || !isWorn()) {
-    sleepStatus = 1;
-    return;
-  }
+  if (Bangle.isCharging() || !isWorn()) { sleepStatus = 1; return; }
 
-  // Movement-based classification
   const hs = Bangle.getHealthStatus("day") || {};
   const mv = hs.movement | 0;
 
@@ -127,36 +134,36 @@ function drawClock() {
 
     g.reset().clearRect(Bangle.appRect);
 
-    const date = new Date();
+    // ✅ Force Europe/Rome display time
+    const date = _romeNowDate();
     const h = date.getHours();
     const m = date.getMinutes();
     const hh = (h < 10 ? "0" : "") + h;
     const mm = (m < 10 ? "0" : "") + m;
 
-    // HH (Anton) : (6x8) MM (Anton)
     g.setFontAlign(0, 0);
 
+    // HH and MM using Anton
     g.setFontAnton(1);
-    g.drawString(hh, x - 24, y);
+    g.drawString(hh, x - 26, y);
+    g.drawString(mm, x + 26, y);
 
+    // ":" centered, always visible, drawn last
+    g.clearRect(x - 6, y - 18, x + 6, y + 18);
     g.setFont("6x8", 2);
     g.drawString(":", x, y);
 
-    g.setFontAnton(1);
-    g.drawString(mm, x + 24, y);
-
+    // Date + DOW
     const dateStr =
       require("locale").date(date, 0).toUpperCase() + "\n" +
       require("locale").dow(date, 0).toUpperCase();
-
     g.setFontAlign(0, 0).setFont("6x8", 2).drawString(dateStr, x, y + 48);
 
-    // MAC sotto
+    // MAC
     g.setFontAlign(0, 0).setFont("6x8", 1).drawString(NRF.getAddress(), x, y + 80);
 
     drawSleepIcon();
   } catch (e) {
-    // evita loop crash
     g.reset().clearRect(Bangle.appRect);
     g.setFont("6x8", 2).setFontAlign(0, 0);
     g.drawString("ERR", g.getWidth() / 2, g.getHeight() / 2);
@@ -164,7 +171,7 @@ function drawClock() {
 }
 
 // ---------------------------
-// Helpers encoding (tuo codice)
+// Encoding helpers (tuo codice)
 // ---------------------------
 function toByteArray(value, bytes, signed) {
   if (signed && value < 0) value += 1 << (bytes * 8);
@@ -172,14 +179,12 @@ function toByteArray(value, bytes, signed) {
   for (let i = 0; i < bytes; i++) arr.push((value >> (i * 8)) & 0xFF);
   return arr;
 }
-
 function encodeAcc(data) {
   const x = toByteArray(data.x * 1000, 2, true);
   const y = toByteArray(data.y * 1000, 2, true);
   const z = toByteArray(data.z * 1000, 2, true);
   return [x[0], x[1], y[0], y[1], z[0], z[1]];
 }
-
 function encodeMag(data) {
   const x = toByteArray(data.x, 2, true);
   const y = toByteArray(data.y, 2, true);
@@ -238,10 +243,10 @@ function setupBLE() {
 // Sensor cycle (tuo codice)
 // ---------------------------
 function startSensorCycle() {
-  // HRM sempre attivo
+  // HRM always on
   if (!Bangle.isHRMOn()) Bangle.setHRMPower(true, "always");
 
-  // Barometro + bussola on per 5s ogni 10s
+  // Barometer + compass on for 5s every 10s
   Bangle.setBarometerPower(true, "cycle");
   Bangle.setCompassPower(true, "cycle");
   setTimeout(() => {
@@ -256,13 +261,9 @@ function startSensorCycle() {
 Bangle.on("HRM", v => {
   if (v && v.confidence >= 50 && v.bpm > 0) lastValidBPM = v.bpm;
   hrm_1 = v;
-
-  // aggiorna “worn” ad ogni HRM event
   updateWornScoreFromHRM();
-
   updateBLE();
 });
-
 Bangle.on("pressure", v => { bar_1 = v; updateBLE(); });
 Bangle.on("mag", v => { mag_1 = v; updateBLE(); });
 Bangle.on("accel", v => { acc_1 = v; updateBLE(); });
@@ -274,20 +275,14 @@ Bangle.setUI("clock");
 Bangle.loadWidgets();
 setupBLE();
 
-// prima draw
 updateWornScoreFromHRM();
 evaluateSleepStatus();
 drawClock();
 setTimeout(Bangle.drawWidgets, 0);
 
-// Loop principale
 setInterval(() => {
-  // “worn” può cambiare anche senza evento HRM subito
   updateWornScoreFromHRM();
-
-  // sleep eval ogni 10 minuti (internamente)
   evaluateSleepStatus();
-
   drawClock();
   startSensorCycle();
 }, 10000);
