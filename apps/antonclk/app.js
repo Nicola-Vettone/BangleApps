@@ -1,10 +1,12 @@
 // antonclk/app.js
-// BASELINE = your original clock + BLE + sensor cycle
-// ADDED ONLY: sleep detection + on-screen icon (bottom-right)
-// IMPORTANT: HRM is NOT always-on -> we use HRM BURSTS to detect "worn" (low power)
+// YOUR ORIGINAL CLOCK + BLE + SENSOR CYCLE
+// ADDED: DEBUG LOGS (screen overlay + Espruino console prints + optional CSV file)
+// ADDED: Sleep icon + detection (low power HRM burst) + worn debug
 
-Graphics.prototype.setFontAnton = function (scale) {
-  // Actual height 69 (68 - 0)
+// ============================================================
+// Anton font
+// ============================================================
+Graphics.prototype.setFontAnton = function(scale) {
   g.setFontCustom(
     atob("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAA/gAAAAAAAAAAP/gAAAAAAAAAH//gAAAAAAAAB///gAAAAAAAAf///gAAAAAAAP////gAAAAAAD/////gAAAAAA//////gAAAAAP//////gAAAAH///////gAAAB////////gAAAf////////gAAP/////////gAD//////////AA//////////gAA/////////4AAA////////+AAAA////////gAAAA///////wAAAAA//////8AAAAAA//////AAAAAAA/////gAAAAAAA////4AAAAAAAA///+AAAAAAAAA///gAAAAAAAAA//wAAAAAAAAAA/8AAAAAAAAAAA/AAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////AAAAAB///////8AAAAH////////AAAAf////////wAAA/////////4AAB/////////8AAD/////////+AAH//////////AAP//////////gAP//////////gAP//////////gAf//////////wAf//////////wAf//////////wAf//////////wA//8AAAAAB//4A//wAAAAAAf/4A//gAAAAAAP/4A//gAAAAAAP/4A//gAAAAAAP/4A//wAAAAAAf/4A///////////4Af//////////wAf//////////wAf//////////wAf//////////wAP//////////gAP//////////gAH//////////AAH//////////AAD/////////+AAB/////////8AAA/////////4AAAP////////gAAAD///////+AAAAAf//////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/gAAAAAAAAAAP/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/AAAAAAAAAAA//AAAAAAAAAAA/+AAAAAAAAAAB/8AAAAAAAAAAD//////////gAH//////////gAP//////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH/4AAAAB/gAAD//4AAAAf/gAAP//4AAAB//gAA///4AAAH//gAB///4AAAf//gAD///4AAA///gAH///4AAD///gAP///4AAH///gAP///4AAP///gAf///4AAf///gAf///4AB////gAf///4AD////gA////4AH////gA////4Af////gA////4A/////gA//wAAB/////gA//gAAH/////gA//gAAP/////gA//gAA///8//gA//gAD///w//gA//wA////g//gA////////A//gA///////8A//gA///////4A//gAf//////wA//gAf//////gA//gAf/////+AA//gAP/////8AA//gAP/////4AA//gAH/////gAA//gAD/////AAA//gAB////8AAA//gAA////wAAA//gAAP///AAAA//gAAD//8AAAA//gAAAP+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/+AAAAAD/wAAB//8AAAAP/wAAB///AAAA//wAAB///wAAB//wAAB///4AAD//wAAB///8AAH//wAAB///+AAP//wAAB///+AAP//wAAB////AAf//wAAB////AAf//wAAB////gAf//wAAB////gA///wAAB////gA///wAAB////gA///w//AAf//wA//4A//AAA//wA//gA//AAAf/wA//gB//gAAf/wA//gB//gAAf/wA//gD//wAA//wA//wH//8AB//wA///////////gA///////////gA///////////gA///////////gAf//////////AAf//////////AAP//////////AAP/////////+AAH/////////8AAH///+/////4AAD///+f////wAAA///8P////gAAAf//4H///+AAAAH//gB///wAAAAAP4AAH/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/wAAAAAAAAAA//wAAAAAAAAAP//wAAAAAAAAB///wAAAAAAAAf///wAAAAAAAH////wAAAAAAA/////wAAAAAAP/////wAAAAAB//////wAAAAAf//////wAAAAH///////wAAAA////////wAAAP////////wAAA///////H/wAAA//////wH/wAAA/////8AH/wAAA/////AAH/wAAA////gAAH/wAAA///4AAAH/wAAA//+AAAAH/wAAA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gAAAAAAAAH/4AAAAAAAAAAH/wAAAAAAAAAAH/wAAAAAAAAAAH/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//8AAA/////+B///AAA/////+B///wAA/////+B///4AA/////+B///8AA/////+B///8AA/////+B///+AA/////+B////AA/////+B////AA/////+B////AA/////+B////gA/////+B////gA/////+B////gA/////+A////gA//gP/gAAB//wA//gf/AAAA//wA//gf/AAAAf/wA//g//AAAAf/wA//g//AAAA//wA//g//gAAA//wA//g//+AAP//wA//g////////gA//g////////gA//g////////gA//g////////gA//g////////AA//gf///////AA//gf//////+AA//gP//////+AA//gH//////8AA//gD//////4AA//gB//////wAA//gA//////AAAAAAAH////8AAAAAAAA////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////gAAAAB///////+AAAAH////////gAAAf////////4AAB/////////8AAD/////////+AAH//////////AAH//////////gAP//////////gAP//////////gAf//////////wAf//////////wAf//////////wAf//////////wAf//////////4A//wAD/4AAf/4A//gAH/wAAP/4A//gAH/wAAP/4A//gAP/wAAP/4A//gAP/4AAf/4A//wAP/+AD//4A///wP//////4Af//4P//////wAf//4P//////wAf//4P//////wAf//4P//////wAP//4P//////gAP//4H//////gAH//4H//////AAH//4D/////+AAD//4D/////8AAB//4B/////4AAA//4A/////wAAAP/4AP////AAAAB/4AD///4AAAAAAAAAH/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//AAAAAAAAAAA//gAAAAAAAAAA//gAAAAAAAAAA//gAAAAAAADgA//gAAAAAAP/gA//gAAAAAH//gA//gAAAAB///gA//gAAAAP///gA//gAAAD////gA//gAAAf////gA//gAAB/////gA//gAAP/////gA//gAB//////gA//gAH//////gA//gA///////gA//gD///////gA//gf///////gA//h////////gA//n////////gA//////////gAA/////////AAAA////////wAAAA///////4AAAAA///////AAAAAA//////4AAAAAA//////AAAAAAA/////4AAAAAAA/////AAAAAAAA////8AAAAAAAA////gAAAAAAAA///+AAAAAAAAA///4AAAAAAAAA///AAAAAAAAAA//4AAAAAAAAAA/+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//gB///wAAAAP//4H///+AAAA///8P////gAAB///+f////4AAD///+/////8AAH/////////+AAH//////////AAP//////////gAP//////////gAf//////////gAf//////////wAf//////////wAf//////////wA///////////wA//4D//wAB//4A//wB//gAA//4A//gA//gAAf/4A//gA//AAAf/4A//gA//gAAf/4A//wB//gAA//4A///P//8AH//4Af//////////wAf//////////wAf//////////wAf//////////wAf//////////gAP//////////gAP//////////AAH//////////AAD/////////+AAD///+/////8AAB///8f////wAAAf//4P////AAAAH//wD///8AAAAA/+AAf//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH//gAAAAAAAAB///+AA/+AAAAP////gA//wAAAf////wA//4AAB/////4A//8AAD/////8A//+AAD/////+A///AAH/////+A///AAP//////A///gAP//////A///gAf//////A///wAf//////A///wAf//////A///wAf//////A///wA///////AB//4A//4AD//AAP/4A//gAB//AAP/4A//gAA//AAP/4A//gAA/+AAP/4A//gAB/8AAP/4A//wAB/8AAf/4Af//////////wAf//////////wAf//////////wAf//////////wAf//////////wAP//////////gAP//////////gAH//////////AAH/////////+AAD/////////8AAB/////////4AAAf////////wAAAP////////AAAAB///////4AAAAAD/////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/AAB/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="),
     46,
@@ -13,33 +15,77 @@ Graphics.prototype.setFontAnton = function (scale) {
   );
 };
 
-// ------------------------------------------------------------
-// Sleep icon + detection (LOW POWER: HRM bursts only)
-// ------------------------------------------------------------
+// ============================================================
+// Globals (original)
+// ============================================================
+let acc_1, hrm_1, bar_1, mag_1;
+let lastValidBPM = 0;
+
+// ============================================================
+// DEBUG (overlay + console + optional file)
+// ============================================================
+// Set DEBUG_FILE=true to write a CSV in Storage (debug_sensors.csv)
+const DEBUG = true;
+const DEBUG_FILE = true;
+
+let dbg = {
+  hrm: "none",
+  press: "none",
+  mag: "none",
+  acc: "none",
+  wornScore: 0,
+  sleep: 0,
+  last: "",
+};
+
+let _lastConsolePrint = 0;
+function throttlePrint(msg, ms) {
+  const now = Date.now();
+  if (now - _lastConsolePrint >= (ms || 2000)) {
+    _lastConsolePrint = now;
+    print(msg);
+  }
+}
+
+let _logFile;
+function logLine(s) {
+  if (!DEBUG_FILE) return;
+  try {
+    if (!_logFile) _logFile = require("Storage").open("debug_sensors.csv", "a");
+    _logFile.write(s + "\n");
+  } catch (e) {}
+}
+
+function logSensor(type, payload) {
+  // CSV: ts,type,payload
+  logLine(Date.now() + "," + type + "," + payload);
+}
+
+// ============================================================
+// Sleep + worn detection (low power HRM bursts)
+// ============================================================
 // States: 0 unknown, 1 not worn, 2 awake, 3 light, 4 deep
 let sleepStatus = 0;
 let sleepLastEval = 0;
 
-// worn detection (debounced)
 let wornScore = 0;
 const WORN_SCORE_MAX = 6;
 const WORN_SCORE_MIN_WORN = 2;
 
-// thresholds (movement)
 const SLEEP_MOV_DEEP = 30;
 const SLEEP_MOV_LIGHT = 100;
 
-// HRM "worn" thresholds (burst mode)
-const HRM_WORN_CONFIDENCE_MIN = 20; // permissive
+const HRM_WORN_CONFIDENCE_MIN = 20;
 
-const ICON_MOON_16 = { w: 16, h: 16, bpp: 1, data: new Uint8Array([
+// 16x16 icons
+const ICON_MOON_16 = { w:16,h:16,bpp:1, data:new Uint8Array([
   0x00,0x00, 0x03,0x80, 0x0F,0xC0, 0x1F,0xE0,
   0x3E,0x70, 0x3C,0x30, 0x78,0x18, 0x78,0x18,
   0x78,0x18, 0x78,0x18, 0x3C,0x30, 0x3E,0x70,
   0x1F,0xE0, 0x0F,0xC0, 0x03,0x80, 0x00,0x00
 ])};
 
-const ICON_AWAKE_16 = { w: 16, h: 16, bpp: 1, data: new Uint8Array([
+const ICON_AWAKE_16 = { w:16,h:16,bpp:1, data:new Uint8Array([
   0x00,0x00, 0x03,0x80, 0x0C,0x60, 0x18,0x30,
   0x30,0x18, 0x60,0x0C, 0x60,0x0C, 0xC0,0x06,
   0xC0,0x06, 0x60,0x0C, 0x60,0x0C, 0x30,0x18,
@@ -70,7 +116,7 @@ function drawSleepIcon() {
 
 function updateWornScoreFromHRM() {
   if (Bangle.isCharging()) { wornScore = 0; return; }
-  if (!hrm_1) return; // don't degrade if we haven't received HRM yet
+  if (!hrm_1) return; // don't degrade if no HRM yet
   const ok = (hrm_1.confidence >= HRM_WORN_CONFIDENCE_MIN) || (hrm_1.bpm > 0);
   wornScore = ok
     ? Math.min(WORN_SCORE_MAX, wornScore + 1)
@@ -83,12 +129,11 @@ function isWorn() {
 
 function evaluateSleepStatus() {
   const now = Date.now();
-  // evaluate every 10 minutes
   if (now - sleepLastEval < 10 * 60 * 1000) return;
   sleepLastEval = now;
 
   if (Bangle.isCharging() || !isWorn()) {
-    sleepStatus = 1; // not worn
+    sleepStatus = 1;
     return;
   }
 
@@ -100,35 +145,39 @@ function evaluateSleepStatus() {
   else sleepStatus = 2;
 }
 
-// ------------------------------------------------------------
-// Original clock (UNCHANGED) + icon overlay
-// ------------------------------------------------------------
+// ============================================================
+// Original drawClock (unchanged) + debug overlay + icon
+// ============================================================
 function drawClock() {
   const x = g.getWidth() / 2;
   const y = g.getHeight() / 2;
-
   g.reset().clearRect(Bangle.appRect);
 
   const date = new Date();
   const timeStr = require("locale").time(date, 1);
-
-  // exactly as you had it
   g.setFontAlign(0, 0).setFont("Anton").drawString(timeStr, x, y);
 
-  const dateStr =
-    require("locale").date(date, 0).toUpperCase() + "\n" +
-    require("locale").dow(date, 0).toUpperCase();
-
+  const dateStr = require("locale").date(date, 0).toUpperCase() + "\n" +
+                  require("locale").dow(date, 0).toUpperCase();
   g.setFontAlign(0, 0).setFont("6x8", 2).drawString(dateStr, x, y + 48);
   g.setFontAlign(0, 0).setFont("6x8", 1.5).drawString(NRF.getAddress(), x, y + 80);
 
-  // added only
+  // DEBUG OVERLAY (top-left)
+  if (DEBUG) {
+    g.setFont("6x8", 1).setFontAlign(-1, -1);
+    g.drawString("HRM: " + dbg.hrm, 2, 2);
+    g.drawString("PRS: " + dbg.press, 2, 12);
+    g.drawString("MAG: " + dbg.mag, 2, 22);
+    g.drawString("ACC: " + dbg.acc, 2, 32);
+    g.drawString("WS: " + dbg.wornScore + " SL:" + dbg.sleep, 2, 42);
+  }
+
   drawSleepIcon();
 }
 
-// ------------------------------------------------------------
+// ============================================================
 // Original helpers + BLE
-// ------------------------------------------------------------
+// ============================================================
 function toByteArray(value, bytes, signed) {
   if (signed && value < 0) value += 1 << (bytes * 8);
   const arr = [];
@@ -154,12 +203,7 @@ function updateBLE() {
   NRF.updateServices({
     0x180D: {
       0x2A37: {
-        value: [
-          6,
-          hrm_1 && hrm_1.confidence >= 50
-            ? (hrm_1.bpm > 0 ? hrm_1.bpm : lastValidBPM)
-            : lastValidBPM
-        ],
+        value: [6, hrm_1 && hrm_1.confidence >= 50 ? (hrm_1.bpm > 0 ? hrm_1.bpm : lastValidBPM) : lastValidBPM],
         notify: true
       }
     },
@@ -184,7 +228,7 @@ function updateBLE() {
 
 function setupBLE() {
   NRF.setServices({
-    0x180D: { 0x2A37: { value: [6, 0], notify: true, readable: true } },
+    0x180D: { 0x2A37: { value: [6, 0], notify: true, readable: true }},
     0x181A: {
       0x2A1F: { value: [0, 0], notify: true, readable: true },
       0x2AA1: { value: [0, 0, 0, 0, 0, 0], notify: true, readable: true }
@@ -199,11 +243,11 @@ function setupBLE() {
   }, { uart: false });
 }
 
-// ------------------------------------------------------------
-// Original sensor cycle, but HRM is BURST (low power)
-// ------------------------------------------------------------
+// ============================================================
+// Sensor cycle (HRM burst + barometer/compass 5s)
+// ============================================================
 function startSensorCycle() {
-  // HRM burst for worn-check: ON for 2.5s every cycle
+  // HRM burst ON for 2.5s (low power)
   Bangle.setHRMPower(true, "wornBurst");
   setTimeout(() => Bangle.setHRMPower(false, "wornBurst"), 2500);
 
@@ -217,51 +261,88 @@ function startSensorCycle() {
   }, 5000);
 }
 
-// ------------------------------------------------------------
-// Original listeners (+ worn score update)
-// ------------------------------------------------------------
+// ============================================================
+// Listeners (+ update dbg + logs)
+// ============================================================
 Bangle.on("HRM", v => {
-  if (v && v.confidence >= 50) {
-    if (v.bpm > 0) lastValidBPM = v.bpm;
-  }
+  if (v && v.confidence >= 50 && v.bpm > 0) lastValidBPM = v.bpm;
   hrm_1 = v;
 
-  // added only
   updateWornScoreFromHRM();
+
+  // DEBUG
+  dbg.hrm = v ? ((v.bpm | 0) + " c" + (v.confidence | 0)) : "none";
+  dbg.wornScore = wornScore;
+  dbg.sleep = sleepStatus;
+  dbg.last = "HRM";
+  throttlePrint("[HRM] " + dbg.hrm + " WS=" + wornScore, 2000);
+  if (v) logSensor("HRM", (v.bpm|0) + "," + (v.confidence|0));
 
   updateBLE();
 });
 
-Bangle.on("pressure", v => { bar_1 = v; updateBLE(); });
-Bangle.on("mag", v => { mag_1 = v; updateBLE(); });
-Bangle.on("accel", v => { acc_1 = v; updateBLE(); });
+Bangle.on("pressure", v => {
+  bar_1 = v;
 
-// ------------------------------------------------------------
-// Boot (original) + initial sleep init
-// ------------------------------------------------------------
+  // DEBUG
+  dbg.press = v ? ("T" + v.temperature.toFixed(1) + " P" + v.pressure.toFixed(0)) : "none";
+  dbg.last = "PRS";
+  throttlePrint("[PRS] " + dbg.press, 2000);
+  if (v) logSensor("PRS", v.temperature.toFixed(1) + "," + v.pressure.toFixed(0));
+
+  updateBLE();
+});
+
+Bangle.on("mag", v => {
+  mag_1 = v;
+
+  // DEBUG
+  dbg.mag = v ? ((v.x|0) + "," + (v.y|0) + "," + (v.z|0)) : "none";
+  dbg.last = "MAG";
+  throttlePrint("[MAG] " + dbg.mag, 2000);
+  if (v) logSensor("MAG", (v.x|0) + "," + (v.y|0) + "," + (v.z|0));
+
+  updateBLE();
+});
+
+Bangle.on("accel", v => {
+  acc_1 = v;
+
+  // DEBUG
+  dbg.acc = v ? (v.x.toFixed(2) + "," + v.y.toFixed(2) + "," + v.z.toFixed(2)) : "none";
+  dbg.last = "ACC";
+  throttlePrint("[ACC] " + dbg.acc, 2000);
+  if (v) logSensor("ACC", v.x.toFixed(3) + "," + v.y.toFixed(3) + "," + v.z.toFixed(3));
+
+  updateBLE();
+});
+
+// ============================================================
+// Boot (same) + start first burst immediately
+// ============================================================
 Bangle.setUI("clock");
 Bangle.loadWidgets();
-drawClock();
-setTimeout(Bangle.drawWidgets, 0);
 
 setupBLE();
 
-// Start first cycle immediately so HRM burst begins right away
-startSensorCycle();
+startSensorCycle(); // start HRM burst right away
 
-// Give worn status a moment to populate, then evaluate once
-setTimeout(() => {
+drawClock();
+setTimeout(Bangle.drawWidgets, 0);
+
+// evaluate sleep every 10min; update debug frequently
+setInterval(() => {
+  // update status logic
   updateWornScoreFromHRM();
   evaluateSleepStatus();
-  drawClock();
-}, 3000);
+  dbg.wornScore = wornScore;
+  dbg.sleep = sleepStatus;
 
-// Loop: update clock + run sensor burst cycle every 10s (as you had)
-setInterval(() => {
+  // redraw + cycle sensors
   drawClock();
   startSensorCycle();
 
-  // added only (cheap)
-  updateWornScoreFromHRM();
-  evaluateSleepStatus();
+  // periodic log line (helps confirm loop runs)
+  throttlePrint("[TICK] " + new Date().toISOString() + " SL=" + sleepStatus + " WS=" + wornScore, 5000);
+  logSensor("TICK", "sl=" + sleepStatus + ",ws=" + wornScore);
 }, 10000);
