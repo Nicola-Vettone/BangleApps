@@ -1,8 +1,3 @@
-// ============================================================
-// FONT ANTON (NON TOCCARE IL TUO BLOCCO ORIGINALE)
-// ============================================================
-// Incolla QUI esattamente il tuo Graphics.prototype.setFontAnton = function(scale) { ... }
-// con TUTTO l'atob("...") originale IDENTICO.
 
 Graphics.prototype.setFontAnton = function(scale) {
   // Actual height 69 (68 - 0)
