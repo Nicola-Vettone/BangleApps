@@ -40,28 +40,27 @@ const ICON_AWAKE_16 = { w:16,h:16,bpp:1, data:new Uint8Array([
 
 function drawSleepIcon() {
   const r = Bangle.appRect;
-  const size = 16, pad = 6;
+  const size = 18;   // più grande e leggibile
+  const pad  = 4;
   const x = r.x2 - size - pad;
   const y = r.y2 - size - pad;
 
-  // forza colori -> non sparisce
-  g.setColor(1,1,1);
-  g.setBgColor(0,0,0);
+  // Bangle 2: colori MONO (0=nero, 1=bianco)
+  g.setColor(1);                 // bianco
+  g.fillRect(x, y, x+size, y+size);
+  g.setColor(0);                 // nero
+  g.drawRect(x, y, x+size, y+size);
 
-  g.clearRect(x-2, y-2, x+size+2, y+size+2);
+  let ch = "?";
+  // 0=?, 1=X(not worn), 2=awake, 3=light, 4=deep
+  if (sleepStatus === 1) ch = "X";
+  else if (sleepStatus === 2) ch = "A";
+  else if (sleepStatus === 3) ch = "L";
+  else if (sleepStatus === 4) ch = "D";
 
-  if (sleepStatus === 3 || sleepStatus === 4) {
-    g.drawImage(ICON_MOON_16, x, y);
-    if (sleepStatus === 4) g.fillCircle(x + 12, y + 4, 2);
-  } else if (sleepStatus === 2) {
-    g.drawImage(ICON_AWAKE_16, x, y);
-  } else if (sleepStatus === 1) {
-    g.drawLine(x, y, x+size, y+size);
-    g.drawLine(x+size, y, x, y+size);
-  } else {
-    g.setFont("6x8", 1);
-    g.drawString("?", x + 5, y + 2);
-  }
+  g.setFont("6x8", 2);
+  g.setFontAlign(0, 0);
+  g.drawString(ch, x + (size/2), y + (size/2) + 1);
 }
 
 function updateWornScoreFromHRM() {
