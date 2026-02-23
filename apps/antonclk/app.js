@@ -3,9 +3,6 @@
 // ADDED ONLY: sleep detection + on-screen icon (bottom-right)
 // IMPORTANT: HRM is NOT always-on -> we use HRM BURSTS to detect "worn" (low power)
 
-// ------------------------------------------------------------
-// Anton font
-// ------------------------------------------------------------
 Graphics.prototype.setFontAnton = function (scale) {
   // Actual height 69 (68 - 0)
   g.setFontCustom(
