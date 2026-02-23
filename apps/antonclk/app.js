@@ -1,11 +1,12 @@
 // antonclk/app.js
-// Baseline = EXACTLY your original code (time/date/MAC + BLE + sensor cycle)
-// Added ONLY: in-app sleep detection + bottom-right status icon
-// (No SleepLog app needed, no sleep data is sent anywhere)
+// BASELINE = your original clock + BLE + sensor cycle
+// ADDED ONLY: sleep detection + on-screen icon (bottom-right)
+// IMPORTANT: HRM is NOT always-on -> we use HRM BURSTS to detect "worn" (low power)
 
-
-// Clock with large digits using the "Anton" bold font
-Graphics.prototype.setFontAnton = function(scale) {
+// ------------------------------------------------------------
+// Anton font
+// ------------------------------------------------------------
+Graphics.prototype.setFontAnton = function (scale) {
   // Actual height 69 (68 - 0)
   g.setFontCustom(
     atob("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAA/gAAAAAAAAAAP/gAAAAAAAAAH//gAAAAAAAAB///gAAAAAAAAf///gAAAAAAAP////gAAAAAAD/////gAAAAAA//////gAAAAAP//////gAAAAH///////gAAAB////////gAAAf////////gAAP/////////gAD//////////AA//////////gAA/////////4AAA////////+AAAA////////gAAAA///////wAAAAA//////8AAAAAA//////AAAAAAA/////gAAAAAAA////4AAAAAAAA///+AAAAAAAAA///gAAAAAAAAA//wAAAAAAAAAA/8AAAAAAAAAAA/AAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////AAAAAB///////8AAAAH////////AAAAf////////wAAA/////////4AAB/////////8AAD/////////+AAH//////////AAP//////////gAP//////////gAP//////////gAf//////////wAf//////////wAf//////////wAf//////////wA//8AAAAAB//4A//wAAAAAAf/4A//gAAAAAAP/4A//gAAAAAAP/4A//gAAAAAAP/4A//wAAAAAAf/4A///////////4Af//////////wAf//////////wAf//////////wAf//////////wAP//////////gAP//////////gAH//////////AAH//////////AAD/////////+AAB/////////8AAA/////////4AAAP////////gAAAD///////+AAAAAf//////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/gAAAAAAAAAAP/gAAAAAAAAAAf/gAAAAAAAAAAf/gAAAAAAAAAAf/AAAAAAAAAAA//AAAAAAAAAAA/+AAAAAAAAAAB/8AAAAAAAAAAD//////////gAH//////////gAP//////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH/4AAAAB/gAAD//4AAAAf/gAAP//4AAAB//gAA///4AAAH//gAB///4AAAf//gAD///4AAA///gAH///4AAD///gAP///4AAH///gAP///4AAP///gAf///4AAf///gAf///4AB////gAf///4AD////gA////4AH////gA////4Af////gA////4A/////gA//wAAB/////gA//gAAH/////gA//gAAP/////gA//gAA///8//gA//gAD///w//gA//wA////g//gA////////A//gA///////8A//gA///////4A//gAf//////wA//gAf//////gA//gAf/////+AA//gAP/////8AA//gAP/////4AA//gAH/////gAA//gAD/////AAA//gAB////8AAA//gAA////wAAA//gAAP///AAAA//gAAD//8AAAA//gAAAP+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/+AAAAAD/wAAB//8AAAAP/wAAB///AAAA//wAAB///wAAB//wAAB///4AAD//wAAB///8AAH//wAAB///+AAP//wAAB///+AAP//wAAB////AAf//wAAB////AAf//wAAB////gAf//wAAB////gA///wAAB////gA///wAAB////gA///w//AAf//wA//4A//AAA//wA//gA//AAAf/wA//gB//gAAf/wA//gB//gAAf/wA//gD//wAA//wA//wH//8AB//wA///////////gA///////////gA///////////gA///////////gAf//////////AAf//////////AAP//////////AAP/////////+AAH/////////8AAH///+/////4AAD///+f////wAAA///8P////gAAAf//4H///+AAAAH//gB///wAAAAAP4AAH/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/wAAAAAAAAAA//wAAAAAAAAAP//wAAAAAAAAB///wAAAAAAAAf///wAAAAAAAH////wAAAAAAA/////wAAAAAAP/////wAAAAAB//////wAAAAAf//////wAAAAH///////wAAAA////////wAAAP////////wAAA///////H/wAAA//////wH/wAAA/////8AH/wAAA/////AAH/wAAA////gAAH/wAAA///4AAAH/wAAA//+AAAAH/wAAA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gA///////////gAAAAAAAAH/4AAAAAAAAAAH/wAAAAAAAAAAH/wAAAAAAAAAAH/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB//8AAA/////+B///AAA/////+B///wAA/////+B///4AA/////+B///8AA/////+B///8AA/////+B///+AA/////+B////AA/////+B////AA/////+B////AA/////+B////gA/////+B////gA/////+B////gA/////+A////gA//gP/gAAB//wA//gf/AAAA//wA//gf/AAAAf/wA//g//AAAAf/wA//g//AAAA//wA//g//gAAA//wA//g//+AAP//wA//g////////gA//g////////gA//g////////gA//g////////gA//g////////AA//gf///////AA//gf//////+AA//gP//////+AA//gH//////8AA//gD//////4AA//gB//////wAA//gA//////AAAAAAAH////8AAAAAAAA////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////gAAAAB///////+AAAAH////////gAAAf////////4AAB/////////8AAD/////////+AAH//////////AAH//////////gAP//////////gAP//////////gAf//////////wAf//////////wAf//////////wAf//////////wAf//////////4A//wAD/4AAf/4A//gAH/wAAP/4A//gAH/wAAP/4A//gAP/wAAP/4A//gAP/4AAf/4A//wAP/+AD//4A///wP//////4Af//4P//////wAf//4P//////wAf//4P//////wAf//4P//////wAP//4P//////gAP//4H//////gAH//4H//////AAH//4D/////+AAD//4D/////8AAB//4B/////4AAA//4A/////wAAAP/4AP////AAAAB/4AD///4AAAAAAAAAH/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//AAAAAAAAAAA//gAAAAAAAAAA//gAAAAAAAAAA//gAAAAAAADgA//gAAAAAAP/gA//gAAAAAH//gA//gAAAAB///gA//gAAAAP///gA//gAAAD////gA//gAAAf////gA//gAAB/////gA//gAAP/////gA//gAB//////gA//gAH//////gA//gA///////gA//gD///////gA//gf///////gA//h////////gA//n////////gA//////////gAA/////////AAAA////////wAAAA///////4AAAAA///////AAAAAA//////4AAAAAA//////AAAAAAA/////4AAAAAAA/////AAAAAAAA////8AAAAAAAA////gAAAAAAAA///+AAAAAAAAA///4AAAAAAAAA///AAAAAAAAAA//4AAAAAAAAAA/+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//gB///wAAAAP//4H///+AAAA///8P////gAAB///+f////4AAD///+/////8AAH/////////+AAH//////////AAP//////////gAP//////////gAf//////////gAf//////////wAf//////////wAf//////////wA///////////wA//4D//wAB//4A//wB//gAA//4A//gA//gAAf/4A//gA//AAAf/4A//gA//gAAf/4A//wB//gAA//4A///P//8AH//4Af//////////wAf//////////wAf//////////wAf//////////wAf//////////gAP//////////gAP//////////AAH//////////AAD/////////+AAD///+/////8AAB///8f////wAAAf//4P////AAAAH//wD///8AAAAA/+AAf//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH//gAAAAAAAAB///+AA/+AAAAP////gA//wAAAf////wA//4AAB/////4A//8AAD/////8A//+AAD/////+A///AAH/////+A///AAP//////A///gAP//////A///gAf//////A///wAf//////A///wAf//////A///wAf//////A///wA///////AB//4A//4AD//AAP/4A//gAB//AAP/4A//gAA//AAP/4A//gAA/+AAP/4A//gAB/8AAP/4A//wAB/8AAf/4Af//////////wAf//////////wAf//////////wAf//////////wAf//////////wAP//////////gAP//////////gAH//////////AAH/////////+AAD/////////8AAB/////////4AAAf////////wAAAP////////AAAAB///////4AAAAAD/////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/AAB/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAA//AAD/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="),
@@ -15,68 +16,56 @@ Graphics.prototype.setFontAnton = function(scale) {
   );
 };
 
-let acc_1, hrm_1, bar_1, mag_1;
-let lastValidBPM = 0;
-
-// ============================================================
-// ✅ ADDED: Sleep status + icons (ONLY UI, no BLE/MQTT changes)
-// ============================================================
+// ------------------------------------------------------------
+// Sleep icon + detection (LOW POWER: HRM bursts only)
+// ------------------------------------------------------------
 // States: 0 unknown, 1 not worn, 2 awake, 3 light, 4 deep
 let sleepStatus = 0;
 let sleepLastEval = 0;
 
-// worn debounce to avoid X flicker
+// worn detection (debounced)
 let wornScore = 0;
 const WORN_SCORE_MAX = 6;
 const WORN_SCORE_MIN_WORN = 2;
 
-// tunable thresholds (movement)
+// thresholds (movement)
 const SLEEP_MOV_DEEP = 30;
 const SLEEP_MOV_LIGHT = 100;
-const HRM_WORN_CONFIDENCE_MIN = 35;
 
-// 16x16 icons
-const ICON_MOON_16 = {
-  w: 16, h: 16, bpp: 1,
-  data: new Uint8Array([
-    0x00,0x00, 0x03,0x80, 0x0F,0xC0, 0x1F,0xE0,
-    0x3E,0x70, 0x3C,0x30, 0x78,0x18, 0x78,0x18,
-    0x78,0x18, 0x78,0x18, 0x3C,0x30, 0x3E,0x70,
-    0x1F,0xE0, 0x0F,0xC0, 0x03,0x80, 0x00,0x00
-  ])
-};
+// HRM "worn" thresholds (burst mode)
+const HRM_WORN_CONFIDENCE_MIN = 20; // permissive
 
-const ICON_AWAKE_16 = {
-  w: 16, h: 16, bpp: 1,
-  data: new Uint8Array([
-    0x00,0x00, 0x03,0x80, 0x0C,0x60, 0x18,0x30,
-    0x30,0x18, 0x60,0x0C, 0x60,0x0C, 0xC0,0x06,
-    0xC0,0x06, 0x60,0x0C, 0x60,0x0C, 0x30,0x18,
-    0x18,0x30, 0x0C,0x60, 0x03,0x80, 0x00,0x00
-  ])
-};
+const ICON_MOON_16 = { w: 16, h: 16, bpp: 1, data: new Uint8Array([
+  0x00,0x00, 0x03,0x80, 0x0F,0xC0, 0x1F,0xE0,
+  0x3E,0x70, 0x3C,0x30, 0x78,0x18, 0x78,0x18,
+  0x78,0x18, 0x78,0x18, 0x3C,0x30, 0x3E,0x70,
+  0x1F,0xE0, 0x0F,0xC0, 0x03,0x80, 0x00,0x00
+])};
+
+const ICON_AWAKE_16 = { w: 16, h: 16, bpp: 1, data: new Uint8Array([
+  0x00,0x00, 0x03,0x80, 0x0C,0x60, 0x18,0x30,
+  0x30,0x18, 0x60,0x0C, 0x60,0x0C, 0xC0,0x06,
+  0xC0,0x06, 0x60,0x0C, 0x60,0x0C, 0x30,0x18,
+  0x18,0x30, 0x0C,0x60, 0x03,0x80, 0x00,0x00
+])};
 
 function drawSleepIcon() {
-  // bottom-right inside appRect
   const r = Bangle.appRect;
   const size = 16, pad = 6;
   const x = r.x2 - size - pad;
   const y = r.y2 - size - pad;
 
-  // clear icon area
   g.clearRect(x - 2, y - 2, x + size + 2, y + size + 2);
 
   if (sleepStatus === 3 || sleepStatus === 4) {
     g.drawImage(ICON_MOON_16, x, y);
-    if (sleepStatus === 4) g.fillCircle(x + 12, y + 4, 2); // deep marker
+    if (sleepStatus === 4) g.fillCircle(x + 12, y + 4, 2);
   } else if (sleepStatus === 2) {
     g.drawImage(ICON_AWAKE_16, x, y);
   } else if (sleepStatus === 1) {
-    // not worn: X
     g.drawLine(x, y, x + size, y + size);
     g.drawLine(x + size, y, x, y + size);
   } else {
-    // unknown: ?
     g.setFont("6x8", 1);
     g.drawString("?", x + 5, y + 2);
   }
@@ -84,7 +73,8 @@ function drawSleepIcon() {
 
 function updateWornScoreFromHRM() {
   if (Bangle.isCharging()) { wornScore = 0; return; }
-  const ok = !!(hrm_1 && hrm_1.confidence >= HRM_WORN_CONFIDENCE_MIN);
+  if (!hrm_1) return; // don't degrade if we haven't received HRM yet
+  const ok = (hrm_1.confidence >= HRM_WORN_CONFIDENCE_MIN) || (hrm_1.bpm > 0);
   wornScore = ok
     ? Math.min(WORN_SCORE_MAX, wornScore + 1)
     : Math.max(0, wornScore - 1);
@@ -96,7 +86,7 @@ function isWorn() {
 
 function evaluateSleepStatus() {
   const now = Date.now();
-  // evaluate every 10 minutes (SleepLog-like cadence)
+  // evaluate every 10 minutes
   if (now - sleepLastEval < 10 * 60 * 1000) return;
   sleepLastEval = now;
 
@@ -105,7 +95,6 @@ function evaluateSleepStatus() {
     return;
   }
 
-  // movement-based classification (tunable)
   const hs = Bangle.getHealthStatus("day") || {};
   const mv = hs.movement | 0;
 
@@ -114,18 +103,19 @@ function evaluateSleepStatus() {
   else sleepStatus = 2;
 }
 
-// ============================================================
-// ORIGINAL drawClock (unchanged) + ONLY add drawSleepIcon()
-// ============================================================
+// ------------------------------------------------------------
+// Original clock (UNCHANGED) + icon overlay
+// ------------------------------------------------------------
 function drawClock() {
   const x = g.getWidth() / 2;
   const y = g.getHeight() / 2;
+
   g.reset().clearRect(Bangle.appRect);
 
   const date = new Date();
   const timeStr = require("locale").time(date, 1);
 
-  // keep as you had it
+  // exactly as you had it
   g.setFontAlign(0, 0).setFont("Anton").drawString(timeStr, x, y);
 
   const dateStr =
@@ -135,13 +125,13 @@ function drawClock() {
   g.setFontAlign(0, 0).setFont("6x8", 2).drawString(dateStr, x, y + 48);
   g.setFontAlign(0, 0).setFont("6x8", 1.5).drawString(NRF.getAddress(), x, y + 80);
 
-  // ✅ ADDED: icon overlay only
+  // added only
   drawSleepIcon();
 }
 
-// ============================================================
-// ORIGINAL helpers + BLE (unchanged)
-// ============================================================
+// ------------------------------------------------------------
+// Original helpers + BLE
+// ------------------------------------------------------------
 function toByteArray(value, bytes, signed) {
   if (signed && value < 0) value += 1 << (bytes * 8);
   const arr = [];
@@ -196,49 +186,50 @@ function updateBLE() {
 }
 
 function setupBLE() {
-  NRF.setServices(
-    {
-      0x180D: { 0x2A37: { value: [6, 0], notify: true, readable: true } },
-      0x181A: {
-        0x2A1F: { value: [0, 0], notify: true, readable: true },
-        0x2AA1: { value: [0, 0, 0, 0, 0, 0], notify: true, readable: true }
-      },
-      "E95D0753251D470AA062FA1922DFA9A8": {
-        "E95D0753251D470AA062FA1922DFA9A8": {
-          value: [0, 0, 0, 0, 0, 0],
-          notify: true,
-          readable: true
-        }
-      }
+  NRF.setServices({
+    0x180D: { 0x2A37: { value: [6, 0], notify: true, readable: true } },
+    0x181A: {
+      0x2A1F: { value: [0, 0], notify: true, readable: true },
+      0x2AA1: { value: [0, 0, 0, 0, 0, 0], notify: true, readable: true }
     },
-    { uart: false }
-  );
+    "E95D0753251D470AA062FA1922DFA9A8": {
+      "E95D0753251D470AA062FA1922DFA9A8": {
+        value: [0, 0, 0, 0, 0, 0],
+        notify: true,
+        readable: true
+      }
+    }
+  }, { uart: false });
 }
 
+// ------------------------------------------------------------
+// Original sensor cycle, but HRM is BURST (low power)
+// ------------------------------------------------------------
 function startSensorCycle() {
-  // HRM sempre attivo
-  if (!Bangle.isHRMOn()) Bangle.setHRMPower(true, "always");
+  // HRM burst for worn-check: ON for 2.5s every cycle
+  Bangle.setHRMPower(true, "wornBurst");
+  setTimeout(() => Bangle.setHRMPower(false, "wornBurst"), 2500);
 
-  // Accende solo Barometro e Bussola temporaneamente
+  // Barometer + Compass temporary
   Bangle.setBarometerPower(true, "cycle");
   Bangle.setCompassPower(true, "cycle");
 
   setTimeout(() => {
     Bangle.setBarometerPower(false, "cycle");
     Bangle.setCompassPower(false, "cycle");
-  }, 5000); // Spegni dopo 5 secondi
+  }, 5000);
 }
 
-// ============================================================
-// ORIGINAL listeners (unchanged) + ONLY updateWornScoreFromHRM()
-// ============================================================
+// ------------------------------------------------------------
+// Original listeners (+ worn score update)
+// ------------------------------------------------------------
 Bangle.on("HRM", v => {
   if (v && v.confidence >= 50) {
     if (v.bpm > 0) lastValidBPM = v.bpm;
   }
   hrm_1 = v;
 
-  // ✅ ADDED: worn debounce updates from HRM events
+  // added only
   updateWornScoreFromHRM();
 
   updateBLE();
@@ -248,27 +239,32 @@ Bangle.on("pressure", v => { bar_1 = v; updateBLE(); });
 Bangle.on("mag", v => { mag_1 = v; updateBLE(); });
 Bangle.on("accel", v => { acc_1 = v; updateBLE(); });
 
-// ============================================================
-// Boot (original) + only initial sleep init
-// ============================================================
+// ------------------------------------------------------------
+// Boot (original) + initial sleep init
+// ------------------------------------------------------------
 Bangle.setUI("clock");
 Bangle.loadWidgets();
-
-setupBLE();
-
-// ✅ ADDED: init worn + sleep once before first draw
-updateWornScoreFromHRM();
-evaluateSleepStatus();
-
 drawClock();
 setTimeout(Bangle.drawWidgets, 0);
 
-// Loop: aggiorna orologio + accendi sensori brevemente ogni 10s
-setInterval(() => {
-  // ✅ ADDED: keep worn updated even if HRM events pause
+setupBLE();
+
+// Start first cycle immediately so HRM burst begins right away
+startSensorCycle();
+
+// Give worn status a moment to populate, then evaluate once
+setTimeout(() => {
   updateWornScoreFromHRM();
   evaluateSleepStatus();
+  drawClock();
+}, 3000);
 
+// Loop: update clock + run sensor burst cycle every 10s (as you had)
+setInterval(() => {
   drawClock();
   startSensorCycle();
+
+  // added only (cheap)
+  updateWornScoreFromHRM();
+  evaluateSleepStatus();
 }, 10000);
