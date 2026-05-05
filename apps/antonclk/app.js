@@ -38,6 +38,21 @@ const ICON_AWAKE_16 = { w:16,h:16,bpp:1, data:new Uint8Array([
   0x18,0x30, 0x0C,0x60, 0x03,0x80, 0x00,0x00
 ])};
 
+// ============================================================
+// SLEEPLOG INTEGRATION HELPERS
+// ============================================================
+function getEffectiveSleepStatus() {
+  if (global.sleeplog && global.sleeplog.status !== undefined)
+    return global.sleeplog.status;
+  return sleepStatus;
+}
+
+function getEffectiveConsecutive() {
+  if (global.sleeplog && global.sleeplog.consecutive !== undefined)
+    return global.sleeplog.consecutive;
+  return 0;
+}
+
 function drawSleepIcon() {
   const r = Bangle.appRect;
   const size = 18;   // più grande e leggibile
@@ -51,12 +66,13 @@ function drawSleepIcon() {
   g.setColor(0);                 // nero
   g.drawRect(x, y, x+size, y+size);
 
+  const eff = getEffectiveSleepStatus();
   let ch = "?";
   // 0=?, 1=X(not worn), 2=awake, 3=light, 4=deep
-  if (sleepStatus === 1) ch = "X";
-  else if (sleepStatus === 2) ch = "A";
-  else if (sleepStatus === 3) ch = "L";
-  else if (sleepStatus === 4) ch = "D";
+  if (eff === 1) ch = "X";
+  else if (eff === 2) ch = "A";
+  else if (eff === 3) ch = "L";
+  else if (eff === 4) ch = "D";
 
   g.setFont("6x8", 2);
   g.setFontAlign(0, 0);
@@ -141,6 +157,44 @@ function drawClock() {
 }
 
 // ============================================================
+// SLEEP BLE SERVICE
+// UUIDs custom 128-bit: "SLEEP" (534C454550) + padding + index
+//   Service:    534C4545500000000000000000000001
+//   Status char:534C4545500000000000000000000002  [status(0-4), consecutive(0-2)]
+//   Stats char: 534C4545500000000000000000000003  [12 bytes, uint16-LE x6]
+//     deepSleep | lightSleep | consecSleep | awakeTime | notWornTime | awakeSleep
+// ============================================================
+function u16le(v) { v = v|0; return [v & 0xFF, (v>>8) & 0xFF]; }
+
+function getSleepStatsBytes() {
+  var s = {deepSleep:0, lightSleep:0, consecSleep:0,
+           awakeTime:0, notWornTime:0, awakeSleep:0};
+  if (global.sleeplog) {
+    try { var gs = global.sleeplog.getStats();
+      if (gs) s = Object.assign(s, gs); } catch(e) {}
+  }
+  return [].concat(
+    u16le(s.deepSleep),   u16le(s.lightSleep),  u16le(s.consecSleep),
+    u16le(s.awakeTime),   u16le(s.notWornTime),  u16le(s.awakeSleep)
+  );
+}
+
+function updateSleepBLE() {
+  NRF.updateServices({
+    "534C4545500000000000000000000001": {
+      "534C4545500000000000000000000002": {
+        value: [getEffectiveSleepStatus(), getEffectiveConsecutive()],
+        notify: true
+      },
+      "534C4545500000000000000000000003": {
+        value: getSleepStatsBytes(),
+        notify: true
+      }
+    }
+  });
+}
+
+// ============================================================
 // BLE helpers (come originale)
 // ============================================================
 function toByteArray(value, bytes, signed) {
@@ -204,6 +258,10 @@ function setupBLE() {
         notify: true,
         readable: true
       }
+    },
+    "534C4545500000000000000000000001": {
+      "534C4545500000000000000000000002": { value: [0, 0],                         notify: true, readable: true },
+      "534C4545500000000000000000000003": { value: [0,0,0,0,0,0,0,0,0,0,0,0],     notify: true, readable: true }
     }
   }, { uart: false });
 }
@@ -243,12 +301,26 @@ Bangle.loadWidgets();
 setupBLE();
 Bangle.setHRMPower(true, "always");
 
+// aggancia il trigger sleeplog se il servizio è attivo
+if (typeof (global.sleeplog || {}).trigger === "object") {
+  global.sleeplog.trigger["antonclk"] = {
+    onChange: false,
+    fn: function(data) {
+      sleepStatus = data.status;
+      updateSleepBLE();
+      drawClock();
+    }
+  };
+}
+
 drawClock();
 setTimeout(() => Bangle.drawWidgets(), 0);
+updateSleepBLE();
 
 setInterval(() => {
   drawClock();
   startSensorCycle();
   updateWornScoreFromHRM();
   evaluateSleepStatus();
+  updateSleepBLE();
 }, 10000);
